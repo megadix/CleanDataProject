@@ -1,3 +1,5 @@
+library(reshape2)
+
 # Reads the list of variables of the study
 readFeatures <- function(dataDir) {
   # read features file
