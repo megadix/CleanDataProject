@@ -1,16 +1,17 @@
+# Reads the list of variables of the study
+readFeatures <- function(dataDir) {
+  # read features file
+  filename <- paste(dataDir, "/features.txt", sep = "")
+  message(paste("Loading features:", filename))
+  read.csv(file = filename, sep = " ", header = FALSE)
+}
+
 # Loads a complete dataset, joining all columns of related files.
 # e.g. for "test" set: X_test.txt, Y_test.txt
-loadDataset <- function(setName) {
+loadDataset <- function(dataDir, setName, features) {
   
   message(paste("Loading dataset:", setName))
-  
-  dataDir <- "data"
-  
-  # read features file
-  
-  filename <- paste(dataDir, "/features.txt", sep = "")
-  features <- read.csv(file = filename, sep = " ", header = FALSE)
-  
+    
   # build an array with the indexes of columns to retain: std() and mean()
   # See point #2:
   #   "Extracts only the measurements on the mean and standard deviation for each measurement."
@@ -74,19 +75,14 @@ loadDataset <- function(setName) {
   data
 }
 
-glueDatasets <- function() {
-  data <- loadDataset("train")
-  data <- rbind(data, loadDataset("test"))  
-  
-  data
-}
-
-labelActivities <- function(data) {
-  activities <- read.csv("data/activity_labels.txt", sep = " ", header = FALSE,
+# Add labels to activities
+labelActivities <- function(dataDir, data) {
+  activities <- read.csv(paste(dataDir, "activity_labels.txt", sep = "/"), sep = " ", header = FALSE,
                          col.names = c("activity_id", "activity_label"))
   merge(x = data, y = activities)
 }
 
+# perform data reshaping and aggregation
 aggregateData <- function(data) {
   melt <- melt(data, id.vars = c("activity_id", "subject_id", "activity_label"))
   dcast(melt, subject_id + activity_id + activity_label ~ variable, mean)
@@ -96,9 +92,14 @@ aggregateData <- function(data) {
 # Main execution
 # ---------------------------------------------------------------
 
-# data <- glueDatasets()
-# data <- labelActivities(data)
+dataDir <- "data"
 
+features <- readFeatures(dataDir)
+data <- loadDataset(dataDir, "train", features)
+data <- rbind(data, loadDataset(dataDir, "test", features))
+data <- labelActivities(dataDir, data)
 tidy <- aggregateData(data)
 
+# write data
+message("Writing tidy.txt")
 write.table(tidy, file = "tidy.txt", row.names = FALSE)
