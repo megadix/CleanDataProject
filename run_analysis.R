@@ -92,7 +92,7 @@ aggregateData <- function(data) {
 # Main execution
 # ---------------------------------------------------------------
 
-dataDir <- "data"
+dataDir <- "UCI HAR Dataset"
 
 features <- readFeatures(dataDir)
 data <- loadDataset(dataDir, "train", features)
